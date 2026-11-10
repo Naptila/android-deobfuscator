@@ -1,0 +1,40 @@
+# Paths are relative to this file. Input may be a standalone DEX or APK.
+input: classes.dex
+output: classes.cleaned.dex
+report: report.json
+dryRun: false
+maxRounds: 20
+
+# Execution order within each method; repeat until unchanged or maxRounds.
+transformers:
+  - id: np.method-hiding
+    options:
+      # Definition cleanup belongs to this feature and consumes same-run evidence.
+      assumeClosedWorld: false
+      keepMethods: []
+  - np.numbers
+  - id: np.instructions
+    options:
+      # Opt-in algebraic float/double recovery. May change rounding, signed zero,
+      # NaN and infinity behavior; false preserves existing floating arithmetic.
+      restoreFloatingPoint: false
+  - id: np.strings
+    options:
+      assumeClosedWorld: false
+      # Opt-in removal of proven unused calls/reads in try blocks.
+      # May change allocation, linkage and VM failure handling.
+      removeProtectedStringCalls: false
+  - id: strings.decrypt
+    options:
+      # Only enable for configured decryptors without per-call business effects.
+      # Keeps the first successful call on each path; VM failures may differ.
+      removeDecryptedCalls: false
+      # Configure only methods known to implement UTF-16 char XOR.
+      xorMethods: []
+      # xorMethods:
+      #   - 'Lexample/Crypto;->decode(Ljava/lang/String;I)Ljava/lang/String;'
+  - np.opaque-predicates
+  - np.dispatcher
+  - np.flower
+
+# Shared cleanup and feature-specific finalizers are scheduled automatically.

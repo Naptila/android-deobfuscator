@@ -1,0 +1,17 @@
+**/target/
+**/build/
+.gradle/
+.build/
+.idea/
+tmp/
+docs/*
+!docs/configuration.md
+!docs/configuration.zh-CN.md
+!docs/extending.md
+!docs/extending.zh-CN.md
+*.dex
+*.apk
+*.yml
+!.github/workflows/*.yml
+!config.example.yml
+!**/src/test/resources/**

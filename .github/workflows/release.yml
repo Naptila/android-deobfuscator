@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+      - '[0-9]*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Resolve release version
+        run: |
+          version="${RELEASE_TAG#v}"
+          if [[ ! "$version" =~ ^[0-9][0-9A-Za-z.+_-]*$ ]]; then
+            echo '::error::Use a version tag such as v1.2.3 or 1.2.3-rc.1.'
+            exit 1
+          fi
+          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+          if [[ "${version%%+*}" == *-* ]]; then
+            echo 'PRERELEASE=true' >> "$GITHUB_ENV"
+          else
+            echo 'PRERELEASE=false' >> "$GITHUB_ENV"
+          fi
+
+      - name: Test and build distribution
+        run: bash ./gradlew --no-daemon --stacktrace clean test installDist distZip "-PreleaseVersion=$RELEASE_VERSION"
+
+      - name: Check CLI launchers
+        run: |
+          build/install/deobfuscator/bin/deobfuscator --help
+          build/install/deobfuscator/bin/deobfuscator --list-transformers
+
+      - name: Generate checksums
+        working-directory: build/distributions
+        run: sha256sum "deobfuscator-$RELEASE_VERSION.zip" > SHA256SUMS
+
+      - name: Publish GitHub Release
+        working-directory: build/distributions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          state="$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' 2>/dev/null || true)"
+          if [[ "$state" == 'false' ]]; then
+            echo "Release $RELEASE_TAG is already published."
+            exit 0
+          fi
+          if [[ "$state" != 'true' ]]; then
+            gh release create "$RELEASE_TAG" \
+              --verify-tag \
+              --draft \
+              --generate-notes \
+              --title "Android Deobfuscator $RELEASE_TAG" \
+              --prerelease="$PRERELEASE"
+          fi
+          gh release upload "$RELEASE_TAG" \
+            "deobfuscator-$RELEASE_VERSION.zip" SHA256SUMS --clobber
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease="$PRERELEASE"

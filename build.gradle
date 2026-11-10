@@ -1,0 +1,43 @@
+plugins { id 'application' }
+
+group = 'me.naptila.deobfuscator'
+version = providers.gradleProperty('releaseVersion').getOrElse('0.1.0-SNAPSHOT')
+repositories { mavenCentral() }
+
+dependencies {
+    implementation 'org.smali:dexlib2:2.5.2'
+    // dexlib2 exposes Guava collection types but declares Guava as runtime-only in its metadata.
+    implementation 'com.google.guava:guava:33.4.8-jre'
+    implementation 'org.yaml:snakeyaml:2.4'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+tasks.withType(Test).configureEach {
+    useJUnit()
+    testLogging { events 'failed', 'skipped' }
+}
+
+application {
+    mainClass = 'me.naptila.deobfuscator.cli.Main'
+    applicationName = 'deobfuscator'
+}
+
+distributions {
+    main {
+        contents {
+            from('README.md', 'README.zh-CN.md', 'config.example.yml')
+            from('docs') {
+                include 'configuration.md', 'configuration.zh-CN.md', 'extending.md', 'extending.zh-CN.md'
+                into 'docs'
+            }
+        }
+    }
+}

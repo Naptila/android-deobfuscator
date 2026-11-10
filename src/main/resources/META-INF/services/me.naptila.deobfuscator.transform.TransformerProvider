@@ -1,0 +1,13 @@
+me.naptila.deobfuscator.transformers.np.numbers.NumberTransformer$Provider
+me.naptila.deobfuscator.transformers.np.methodhiding.MethodHidingTransformer$Provider
+me.naptila.deobfuscator.transformers.np.methodhiding.MethodHidingTransformer$CleanupProvider
+me.naptila.deobfuscator.transformers.np.reflection.ReflectionTransformer$Provider
+me.naptila.deobfuscator.transformers.np.instructions.InstructionTransformer$Provider
+me.naptila.deobfuscator.transformers.np.strings.StringTransformer$Provider
+me.naptila.deobfuscator.transformers.np.controlflow.OpaquePredicateTransformer$Provider
+me.naptila.deobfuscator.transformers.np.controlflow.DispatcherTransformer$Provider
+me.naptila.deobfuscator.transformers.np.controlflow.FlowerTransformer$Provider
+me.naptila.deobfuscator.transformers.np.NpCleanup$Provider
+me.naptila.deobfuscator.transformers.strings.StringDecryptTransformer$Provider
+me.naptila.deobfuscator.transformers.cleanup.ConstantSwitchTransformer$Provider
+me.naptila.deobfuscator.transformers.cleanup.UnreachableCodeTransformer$Provider
